@@ -1,58 +1,62 @@
 package com.example.genai_competition.ui.theme
 
-import android.app.Activity
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+private val TutorDarkColorScheme = darkColorScheme(
+    primary = GoldAccent,
+    onPrimary = MidnightBlue,
+    primaryContainer = GoldAccentDark,
+    onPrimaryContainer = MidnightBlue,
+    secondary = TextSecondary,
+    onSecondary = MidnightBlue,
+    background = MidnightBlue,
+    onBackground = TextPrimary,
+    surface = SteelShadow,
+    onSurface = TextPrimary,
+    surfaceVariant = SlateMist,
+    onSurfaceVariant = TextSecondary,
+    outline = OutlineColor,
+    outlineVariant = OutlineColor,
+    inverseSurface = GoldAccent,
+    inverseOnSurface = MidnightBlue,
+    surfaceTint = GoldAccent
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+private val TutorLightColorScheme = lightColorScheme(
+    primary = GoldAccentDark,
+    onPrimary = MidnightBlue,
+    primaryContainer = GoldAccent,
+    onPrimaryContainer = MidnightBlue,
+    secondary = SlateMist,
+    onSecondary = TextPrimary,
+    background = Color(0xFFF7F4EC),
+    onBackground = Color(0xFF1A2233),
+    surface = Color(0xFFFBFAF6),
+    onSurface = Color(0xFF1A2233),
+    surfaceVariant = Color(0xFFE4E6EF),
+    onSurfaceVariant = Color(0xFF4A5266),
+    outline = Color(0xFF7E8799),
+    outlineVariant = Color(0xFFABB2C3),
+    inverseSurface = Color(0xFF2C3446),
+    inverseOnSurface = TextPrimary,
+    surfaceTint = GoldAccentDark
 )
 
 @Composable
 fun GenAI_CompetitionTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    useDarkTheme: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    val colorScheme = if (useDarkTheme) TutorDarkColorScheme else TutorLightColorScheme
 
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = Shapes,
         content = content
     )
 }
