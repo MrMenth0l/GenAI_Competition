@@ -19,7 +19,8 @@ data class ChatAttachment(
     val id: String = UUID.randomUUID().toString(),
     val uri: Uri,
     val name: String,
-    val type: AttachmentType
+    val type: AttachmentType,
+    val summary: String? = null
 )
 
 data class ChatMessage(

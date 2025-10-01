@@ -86,7 +86,13 @@ class TutorRepository(
             return message.content.ifBlank { "(No text message provided)" }
         }
         val attachmentsDescription = message.attachments.joinToString(separator = "\n") { attachment ->
-            "- ${attachment.type.name.lowercase().replaceFirstChar(Char::uppercase)}: ${attachment.name}"
+            buildString {
+                append("- ${attachment.type.name.lowercase().replaceFirstChar(Char::uppercase)}: ${attachment.name}")
+                if (!attachment.summary.isNullOrBlank()) {
+                    append('\n')
+                    append("  Summary: ${attachment.summary}")
+                }
+            }
         }
 
         val base = message.content.ifBlank { "(No text message provided)" }

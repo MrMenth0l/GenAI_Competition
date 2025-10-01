@@ -68,6 +68,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.genai_competition.data.attachments.AttachmentAnalyzer
 import com.example.genai_competition.data.model.AttachmentType
 import com.example.genai_competition.data.model.ChatAttachment
 import com.example.genai_competition.data.model.ChatMessage
@@ -88,9 +89,11 @@ fun ChatScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val messageListState = rememberLazyListState()
+    val attachmentAnalyzer = remember(context) { AttachmentAnalyzer(context) }
 
     var messageText by rememberSaveable(state.course.id) { mutableStateOf("") }
     val pendingAttachments = remember(state.course.id) { mutableStateListOf<ChatAttachment>() }
+    var isProcessing by rememberSaveable(state.course.id) { mutableStateOf(false) }
 
     val pickImageLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -215,9 +218,23 @@ fun ChatScreen(
                 messageText = messageText,
                 onMessageChange = { messageText = it },
                 onSend = {
-                    onSendMessage(messageText, pendingAttachments.toList())
-                    messageText = ""
-                    pendingAttachments.clear()
+                    if (isProcessing) return@ChatInputBar
+                    coroutineScope.launch {
+                        try {
+                            isProcessing = true
+                            val enriched = attachmentAnalyzer.enrichAttachments(pendingAttachments.toList())
+                            onSendMessage(messageText, enriched)
+                            messageText = ""
+                            pendingAttachments.clear()
+                        } catch (throwable: Throwable) {
+                            snackbarHostState.showSnackbar(
+                                message = throwable.message ?: "Failed to process attachments.",
+                                duration = SnackbarDuration.Short
+                            )
+                        } finally {
+                            isProcessing = false
+                        }
+                    }
                 },
                 pickImage = {
                     pickImageLauncher.launch(
@@ -227,7 +244,7 @@ fun ChatScreen(
                 pickPdf = {
                     pickPdfLauncher.launch(arrayOf("application/pdf"))
                 },
-                isSending = state.isSending,
+                isSending = state.isSending || isProcessing,
                 attachments = pendingAttachments,
                 onRemoveAttachment = { attachment ->
                     pendingAttachments.removeAll { it.id == attachment.id }
@@ -314,17 +331,31 @@ private fun AttachmentPreview(
         AttachmentType.IMAGE -> {
             Surface(
                 modifier = modifier
-                    .height(160.dp)
                     .fillMaxWidth()
                     .clickable(onClick = onClick),
                 shape = MaterialTheme.shapes.medium,
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.2f)
             ) {
-                AsyncImage(
-                    model = attachment.uri,
-                    contentDescription = attachment.name,
-                    modifier = Modifier.fillMaxSize()
-                )
+                Column {
+                    AsyncImage(
+                        model = attachment.uri,
+                        contentDescription = attachment.name,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(160.dp)
+                    )
+                    if (!attachment.summary.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = attachment.summary,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier
+                                .padding(horizontal = 12.dp)
+                                .padding(bottom = 12.dp)
+                        )
+                    }
+                }
             }
         }
         AttachmentType.PDF -> {
@@ -335,25 +366,36 @@ private fun AttachmentPreview(
                 shape = MaterialTheme.shapes.medium,
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.2f)
             ) {
-                Row(
+                Column(
                     modifier = Modifier
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                         .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.PictureAsPdf,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = attachment.name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.PictureAsPdf,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = attachment.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    if (!attachment.summary.isNullOrBlank()) {
+                        Text(
+                            text = attachment.summary,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }

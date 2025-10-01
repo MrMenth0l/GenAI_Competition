@@ -23,7 +23,8 @@ object MockChatData {
                     attachments = listOf(
                         pdfAttachment(
                             name = "DivideAndConquer_Review.pdf",
-                            uri = "https://example.com/mock/divide-and-conquer.pdf"
+                            uri = "https://example.com/mock/divide-and-conquer.pdf",
+                            summary = "Recap of divide & conquer strategy patterns with worked mergesort/quicksort examples."
                         )
                     )
                 ),
@@ -42,7 +43,8 @@ object MockChatData {
                     attachments = listOf(
                         imageAttachment(
                             name = "VirtualMemoryLayers.png",
-                            uri = "https://picsum.photos/seed/vmm/800/480"
+                            uri = "https://picsum.photos/seed/vmm/800/480",
+                            summary = "Diagram showing TLB lookup, page table walk, and fault handling sequence."
                         )
                     )
                 ),
@@ -97,18 +99,20 @@ object MockChatData {
             timestamp = Instant.now()
         )
 
-    private fun pdfAttachment(name: String, uri: String): ChatAttachment =
+    private fun pdfAttachment(name: String, uri: String, summary: String? = null): ChatAttachment =
         ChatAttachment(
             uri = Uri.parse(uri),
             name = name,
-            type = AttachmentType.PDF
+            type = AttachmentType.PDF,
+            summary = summary
         )
 
-    private fun imageAttachment(name: String, uri: String): ChatAttachment =
+    private fun imageAttachment(name: String, uri: String, summary: String? = null): ChatAttachment =
         ChatAttachment(
             uri = Uri.parse(uri),
             name = name,
-            type = AttachmentType.IMAGE
+            type = AttachmentType.IMAGE,
+            summary = summary
         )
 
     private fun defaultReply(courseId: String, turnIndex: Int): String =
